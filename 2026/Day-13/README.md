@@ -306,7 +306,7 @@ Filesystem      Inodes  IUsed   IFree IUse% Mounted on
 ---
 
 # INTERVIEW QUESTIONS: 
-We can not create any new Files or Directories. My system is showing that I have a lot of Disk Spakce. Why is it that Disk Space Exists yes Files Cannot Be Created?
+When a user checks a VM's Linux file system (Hint: Using df -h) it shows the user that 20G of Disk Space is Available. When the user tries to create a new file (Hint: using 'touch' command) the system is not able to create a new file. What is the root cause of this problem?
 
 Run this command to show free disk space:
 
