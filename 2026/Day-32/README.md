@@ -1,790 +1,477 @@
-# Linux Administration Bootcamp
-# Day 30/31 – Login Process, systemd, Shells and Initialization Files
-## June 6/7th, 2026
+# PRACTICE LAB
+# Day 32 – Login Process, systemd, Shells and Initialization Files
+## June 8th, 2026
 
-> Based on Class Notes and Slides by NIT Academy 
+> Based on Class Notes and Slides by NIT Academy :contentReference[oaicite:0]{index=0}
 
 ---
 
 # Objective
 
-By the end of this class students will be able to:
+In this practice lab, students will learn how to:
 
-1. Understand what happens during the Linux login process.
-2. Identify the first process running on a Linux system (PID 1).
-3. Understand the relationship between PID and PPID.
-4. Identify their current shell and shell PID.
-5. Understand the difference between Login Shell and Non-Login Shell.
-6. Understand how Bash initialization files work.
-7. Identify Global and User initialization files.
-8. Understand how the PATH variable works.
-9. Create custom commands using PATH.
-10. Understand the purpose of `.bash_logout`.
+1. Check Linux kernel and operating system version.
+2. Verify that `systemd` is running as PID 1.
+3. Identify the current Linux shell.
+4. Check the PID of the current shell.
+5. Explore the `/etc` configuration directory.
+6. Read the `/etc/shells` file using absolute and relative paths.
+7. Use the `ping` command and stop a running process.
+8. Run basic troubleshooting commands.
+9. Identify global Bash initialization files.
+10. Create a backup before modifying critical configuration files.
 
 ---
 
 # Table of Contents
 
-1. Introduction
-2. Linux Login Process
-3. Understanding PID and PPID
-4. Task 1 – Verify systemd (PID 1)
-5. Task 2 – Identify Your Shell
-6. Task 3 – Understand Process Hierarchy
-7. Login Shell vs Non-Login Shell
-8. Initialization Files
-9. Global vs User Initialization Files
-10. Task 4 – Examine Initialization Files
-11. PATH Variable
-12. Task 5 – Examine PATH
-13. Task 6 – Create a Global Command
-14. Understanding .bash_logout
-15. Task 7 – Test Login Initialization Files
-16. Review Questions
-17. Lab Summary
+| Task | Title |
+|------|--------|
+| 1 | Check Kernel and Operating System Version |
+| 2 | Verify systemd is Running as PID 1 |
+| 3 | Identify Current Linux Shell |
+| 4 | Find the PID of Your Current Shell |
+| 5 | Explore the /etc Configuration Directory |
+| 6 | Read the /etc/shells File |
+| 7 | Practice the ping Command |
+| 8 | Basic Troubleshooting Commands |
+| 9 | Identify Global Initialization Files |
+| 10 | Backup a Critical Configuration File |
+| 11 | Final Review Questions |
+| 12 | Lab Summary |
 
 ---
 
-# Introduction
+# Task 1 - Check Kernel and Operating System Version
 
-When a Linux system starts:
+## Question
 
-```text
-Kernel
-   │
-   ▼
-systemd (PID 1)
-   │
-   ▼
-sshd
-   │
-   ▼
-bash
-   │
-   ▼
-Initialization Files
-   │
-   ▼
-User Prompt
-```
-
-Every process in Linux has a parent process.
-
-Processes do not appear automatically.
-
-Almost every process is created (forked) by another process.
-
----
-
-# Linux Login Process
-
-When a user logs into Linux using:
-
-- SSH
-- Guacamole
-- Console Login
-- Virtual Terminal
-
-Linux performs the following steps:
-
-### Step 1
-
-Linux Kernel starts.
-
-### Step 2
-
-Kernel starts:
-
-```bash
-systemd
-```
-
-which becomes:
-
-```text
-PID 1
-```
-
-### Step 3
-
-systemd starts:
-
-```bash
-sshd
-```
-
-### Step 4
-
-sshd authenticates the user.
-
-### Step 5
-
-sshd launches:
-
-```bash
-bash
-```
-
-### Step 6
-
-bash reads initialization files.
-
-### Step 7
-
-User receives a prompt:
-
-```bash
-[root@server ~]#
-```
-
----
-
-# Understanding PID and PPID
-
-## PID
-
-PID means:
-
-```text
-Process ID
-```
-
-Every process has a unique number.
-
-Example:
-
-```text
-PID 230948 = bash
-```
-
----
-
-## PPID
-
-PPID means:
-
-```text
-Parent Process ID
-```
-
-This identifies which process launched another process.
-
-Example:
-
-```text
-sshd --> bash
-```
-
-Therefore:
-
-```text
-sshd = PPID
-bash = PID
-```
-
----
-
-# Task 1 – Verify systemd (PID 1)
-
-## Objective
-
-Verify the first process running on Linux.
+What is your Kernel Version and Operating System Version?
 
 ### Run
 
-```bash
+~~~bash
+uname -a
+uname -r
+cat /etc/os-release
+~~~
+
+### Student Observation
+
+Write down:
+
+~~~text
+Kernel Version:
+Operating System:
+~~~
+
+### Notes
+
+- `uname -a` displays complete kernel information.
+- `uname -r` displays only the kernel version.
+- `cat /etc/os-release` displays operating system information.
+
+---
+
+# Task 2 - Verify systemd is Running as PID 1
+
+## Question
+
+How do you know that `systemd` is running?
+
+### Run
+
+~~~bash
 ps 1
-```
+ps -e
+~~~
 
-### Expected Output
+### Notes
 
-```text
-PID TTY      STAT   TIME COMMAND
-1   ?        Ss     0:16 /usr/lib/systemd/systemd
-```
+- `ps 1` displays the process with PID 1.
+- `ps -e` displays all running processes.
+- PID 1 is usually `systemd`.
+- `systemd` is the parent process of most other processes.
+
+### Student Observation
+
+Answer the following:
+
+1. Which process has PID 1?
+2. Why is PID 1 important?
+3. What does `ps -e` display?
 
 ---
 
-## Discussion
+# Task 3 - Identify Current Linux Shell
 
-Questions:
+## Question
 
-1. What is PID 1?
-2. Why is systemd important?
-3. What happens if PID 1 crashes?
-
----
-
-# Task 2 – Identify Your Current Shell
-
-## Objective
-
-Determine which shell you are using.
+How do you know which Linux shell you are using?
 
 ### Run
 
-```bash
+~~~bash
 echo $SHELL
-```
+~~~
 
-Example:
+### Example Output
 
-```text
+~~~text
 /bin/bash
-```
+~~~
+
+### Student Observation
+
+Write down:
+
+~~~text
+Current Shell:
+~~~
+
+### Notes
+
+Common Linux shells include:
+
+- Bash
+- Sh
+- Zsh
+- Ksh
 
 ---
 
-### Check Login Shell Status
+# Task 4 - Find the PID of Your Current Shell
 
-Run:
+## Question
 
-```bash
-shopt login_shell
-```
+Other than `echo $SHELL`, how do you determine the Process ID (PID) of your shell?
 
-Example:
+### Run
 
-```text
-login_shell on
-```
-
----
-
-### Check Your Shell PID
-
-Run:
-
-```bash
-echo $$
-```
-
-Example:
-
-```text
-230948
-```
-
----
-
-### Verify Using ps
-
-Run:
-
-```bash
+~~~bash
 ps $$
-```
+echo $$
+echo $0
+~~~
 
-Example:
+### Student Observation
 
-```text
-PID TTY      STAT TIME COMMAND
-230948 pts/0 Ss   0:00 -bash
-```
+Write down:
 
----
+~~~text
+Shell PID:
+Shell Name:
+~~~
 
-## Discussion
+### Notes
 
-Questions:
-
-1. What is your shell PID?
-2. Why does bash appear with a "-" sign?
-
-Example:
-
-```text
--bash
-```
+| Command | Purpose |
+|----------|----------|
+| `ps $$` | Displays the current shell process |
+| `echo $$` | Displays the shell PID |
+| `echo $0` | Displays the shell name |
 
 ---
 
-# Task 3 – Understand Process Hierarchy
+# Task 5 - Explore the /etc Configuration Directory
 
-## Objective
+## Question
 
-View parent-child relationships.
+Which directory largely contains Linux configuration files?
 
-### Check Parent Process
+### Run
 
-Run:
+~~~bash
+ls -l /etc
+cd /etc
+ls
+~~~
 
-```bash
-ps -fp $PPID
-```
+### Student Observation
 
-Example:
+Answer the following:
 
-```text
-sshd: root@pts/0
-```
+1. What types of files do you see?
+2. Why is `/etc` important?
 
----
+### Notes
 
-### Display Process Tree
+Examples of important files:
 
-Run:
-
-```bash
-pstree -p $PPID
-```
-
-Example:
-
-```text
-sshd
- └── sshd
-      └── bash
-           └── pstree
-```
-
----
-
-## Discussion
-
-Questions:
-
-1. Which process launched bash?
-2. Which process launched sshd?
-3. What launched systemd?
-
----
-
-# Login Shell vs Non-Login Shell
-
-## Login Shell
-
-Created when Linux authenticates you.
-
-Examples:
-
-- SSH Login
-- Console Login
-- Guacamole Login
-
-Files executed:
-
-```text
-/etc/profile
-~/.bash_profile
-~/.profile
-```
-
----
-
-## Non-Login Shell
-
-Created when already logged in and starting another shell.
-
-Example:
-
-```bash
-/bin/bash
-```
-
-or
-
-```bash
-bash
-```
-
-Files executed:
-
-```text
-/etc/bashrc
-~/.bashrc
-```
-
----
-
-## Comparison
-
-| Login Shell | Non-Login Shell |
-|------------|----------------|
-| Authentication required | Already authenticated |
-| Reads /etc/profile | Does not read /etc/profile |
-| Reads .bash_profile | Reads .bashrc |
-| First shell after login | Additional shell |
-
----
-
-# Initialization Files
-
-Initialization files configure:
-
-- PATH
-- Prompt
-- Aliases
-- Functions
-- Environment Variables
-
-These files execute before the prompt appears.
-
----
-
-# Global vs User Initialization Files
-
-## Global Files
-
-Affect all users.
-
-Location:
-
-```text
+~~~text
 /etc/profile
 /etc/bashrc
-```
-
-Only root should modify these files.
-
----
-
-## User Files
-
-Affect only one user.
-
-Examples:
-
-```text
-~/.bash_profile
-~/.bashrc
-~/.bash_logout
-```
-
-Users can modify their own files.
+/etc/passwd
+/etc/group
+/etc/shadow
+/etc/shells
+~~~
 
 ---
 
-# Task 4 – Examine Initialization Files
+# Task 6 - Read the /etc/shells File
 
-## Check Global Files
+## Question
 
-Run:
+How can you view the `/etc/shells` file in read-only mode?
 
-```bash
-ls -l /etc/profile
-ls -l /etc/bashrc
-```
+### Method 1 - Absolute Path
+
+#### Run
+
+~~~bash
+cat /etc/shells
+~~~
 
 ---
 
-## Read Global Files
+### Method 2 - Relative Path
 
-Run:
+#### Run
 
-```bash
+~~~bash
+cd /etc
+pwd
+cat shells
+~~~
+
+### Student Observation
+
+Answer:
+
+1. What shells are available on your system?
+2. What is the difference between Absolute Path and Relative Path?
+
+### Notes
+
+Absolute Path Example:
+
+~~~text
+/etc/shells
+~~~
+
+Relative Path Example:
+
+~~~text
+shells
+~~~
+
+---
+
+# Task 7 - Practice the ping Command
+
+## Question
+
+What does the `ping` command teach us?
+
+### Run
+
+~~~bash
+ping google.com
+ping -c 5 google.com
+ping 8.8.8.8
+~~~
+
+### Important Note
+
+To stop a running process:
+
+~~~text
+Ctrl + C
+~~~
+
+### Student Observation
+
+Answer:
+
+1. Was Google reachable?
+2. What happens when you ping an IP address directly?
+3. Why would a System Administrator use ping?
+
+### Notes
+
+Ping is commonly used to test:
+
+- Network connectivity
+- DNS resolution
+- Internet access
+- Response times
+- Reachability of remote systems
+
+---
+
+# Task 8 - Basic Troubleshooting Commands
+
+## Question
+
+As a Linux System Administrator, whenever you troubleshoot a system, run the following commands and think about why each one is useful.
+
+### Run
+
+~~~bash
+date
+uptime
+hostname
+whoami
+pwd
+cd ~
+~~~
+
+### Student Observation
+
+Complete the table:
+
+| Command | Why Is It Useful? |
+|----------|------------------|
+| date | |
+| uptime | |
+| hostname | |
+| whoami | |
+| pwd | |
+| cd ~ | |
+
+---
+
+# Task 9 - Identify Global Initialization Files
+
+## Question
+
+What are the two major Global Initialization Files?
+
+### Run
+
+~~~bash
 cat /etc/profile
 cat /etc/bashrc
-```
+~~~
+
+### Student Observation
+
+Answer:
+
+1. Which file affects Login Shells?
+2. Which file affects Non-Login Shells?
+3. Why are these files important?
+
+### Notes
+
+| File | Purpose |
+|--------|----------|
+| `/etc/profile` | Global Login Shell Initialization File |
+| `/etc/bashrc` | Global Interactive Shell Initialization File |
 
 ---
 
-## View User Files
+# Task 10 - Backup a Critical Configuration File
 
-Run:
+## Question
 
-```bash
-ls -la ~ | grep bash
-```
+What should you always do before modifying or deleting a critical configuration file?
 
----
+### Answer
 
-## Discussion
+Always create a backup.
 
-Questions:
+### Run
 
-1. Which files affect all users?
-2. Which files affect only one user?
+~~~bash
+cp -r /etc/profile /etc/profile_bak
+cd /etc
+ls
+~~~
 
----
+### Verify
 
-# PATH Variable
+You should see:
 
-PATH tells Linux where commands are located.
+~~~text
+profile
+profile_bak
+~~~
 
-Run:
+### Important Warning
 
-```bash
-echo $PATH
-```
+Never delete:
 
-Example:
+~~~text
+/etc/profile
+~~~
 
-```text
-/root/.local/bin:/root/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
-```
+This is a critical system file.
 
----
+### Remove the Backup File
 
-# How PATH Works
+~~~bash
+rm /etc/profile_bak
+~~~
 
-When you type:
+### Notes
 
-```bash
-date
-```
-
-Bash searches directories from left to right.
-
-Example:
-
-```text
-/root/bin
-/usr/local/bin
-/usr/sbin
-/usr/bin
-```
-
-When it finds:
-
-```text
-/usr/bin/date
-```
-
-it executes the command.
+- `rm` removes files.
+- `rmdir` removes empty directories.
+- `profile_bak` is a file, therefore `rm` must be used.
 
 ---
 
-# Task 5 – Examine PATH
-
-## Display PATH
-
-Run:
-
-```bash
-echo $PATH
-```
-
----
-
-## Locate Commands
-
-Run:
-
-```bash
-whereis date
-whereis uptime
-whereis ls
-whereis mkdir
-whereis touch
-```
-
----
-
-## Discussion
-
-Questions:
-
-1. Where is the date command located?
-2. Where is the ls command located?
-3. What happens if a command is not found in PATH?
-
----
-
-# Task 6 – Create a Custom Global Command
-
-## Objective
-
-Create your own Linux command.
-
-### Create Directory
-
-Run:
-
-```bash
-mkdir -p /getstuff/bin
-```
-
----
-
-### Create Script
-
-Run:
-
-```bash
-echo -e '#!/bin/bash\necho "Success! The getstuff application is running!"' > /getstuff/bin/hello
-```
-
----
-
-### Make Executable
-
-Run:
-
-```bash
-chmod +x /getstuff/bin/hello
-```
-
----
-
-### Test Command
-
-Run:
-
-```bash
-hello
-```
-
-Expected:
-
-```text
-command not found
-```
-
----
-
-### Add Directory to PATH
-
-Run:
-
-```bash
-echo 'PATH=$PATH:/getstuff/bin ; export PATH' >> ~/.bashrc
-```
-
----
-
-### Reload Bash Configuration
-
-Run:
-
-```bash
-source ~/.bashrc
-```
-
----
-
-### Test Again
-
-Run:
-
-```bash
-hello
-```
-
-Expected:
-
-```text
-Success! The getstuff application is running!
-```
-
----
-
-# Understanding .bash_logout
-
-The file:
-
-```text
-~/.bash_logout
-```
-
-runs when a user exits a login shell.
-
-Examples:
-
-- Clear screen
-- Display goodbye message
-- Log logout time
-
----
-
-# Task 7 – Test Initialization Files
-
-## Create User
-
-Run:
-
-```bash
-useradd john
-passwd john
-```
-
----
-
-## Modify Global Login File
-
-Run:
-
-```bash
-vi /etc/profile
-```
-
-Add:
-
-```bash
-echo "/etc/profile executed"
-```
-
-Save:
-
-```text
-:wq!
-```
-
----
-
-## Login as john
-
-Observe:
-
-```text
-/etc/profile executed
-```
-
----
-
-## Discussion
-
-Questions:
-
-1. Which file displayed the message?
-2. Why did all users see the message?
-3. What would happen if the change was made in .bashrc instead?
-
----
-
-# Review Questions
-
-1. What is PID 1?
-2. What is the role of systemd?
-3. What is the difference between PID and PPID?
-4. What is a Login Shell?
-5. What is a Non-Login Shell?
-6. What files are executed during login?
-7. What is the purpose of .bashrc?
-8. What is the purpose of .bash_profile?
-9. What is the purpose of .bash_logout?
-10. What is PATH?
-11. Why does Linux search PATH from left to right?
-12. What command displays your shell PID?
-13. What command displays the current shell?
-14. What command reloads .bashrc?
-15. What command displays the process tree?
+# Final Review Questions
+
+1. What command shows the kernel version?
+2. What command displays operating system information?
+3. What is PID 1?
+4. Why is systemd important?
+5. What command displays your current shell?
+6. What command displays your shell PID?
+7. What is the purpose of the `/etc` directory?
+8. What is the difference between an Absolute Path and a Relative Path?
+9. What does the ping command test?
+10. How do you stop a running process?
+11. What are the two major Global Initialization Files?
+12. Why should configuration files be backed up before modification?
+13. What is the difference between `rm` and `rmdir`?
 
 ---
 
 # Lab Summary
 
-In this class you learned:
+In this lab you practiced:
 
-- Linux login process.
-- Why systemd is PID 1.
-- How sshd launches bash.
-- Difference between PID and PPID.
-- Difference between Login Shell and Non-Login Shell.
-- Global and User initialization files.
-- How PATH works.
-- How to create custom commands.
-- How .bash_logout works.
-- How Linux builds a user environment before presenting the command prompt.
+- Checking kernel information
+- Checking operating system information
+- Verifying systemd as PID 1
+- Identifying your shell
+- Finding your shell PID
+- Exploring the `/etc` directory
+- Reading `/etc/shells`
+- Understanding Absolute and Relative Paths
+- Using the ping command
+- Stopping processes using Ctrl + C
+- Running basic troubleshooting commands
+- Reading Global Initialization Files
+- Backing up critical configuration files
 
-These concepts are fundamental for:
+---
 
-- RHCSA
-- RHCE
-- Linux Administration
-- DevOps
-- System Engineering
-- Infrastructure Operations
+# Final Note
+
+As a Linux System Administrator, always remember:
+
+~~~bash
+date
+uptime
+hostname
+whoami
+pwd
+~~~
+
+These commands provide valuable information during troubleshooting.
+
+### Golden Rule
+
+~~~text
+BACKUP FIRST, CHANGE LATER
+~~~
 
 ---
 # End of Lab
+
+🐧 Happy Learning Linux!
